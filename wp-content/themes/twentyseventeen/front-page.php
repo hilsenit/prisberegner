@@ -14,6 +14,8 @@
 
 get_header(); ?>
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script> <!-- OGSÅ MIT -->
+
 <div id="primary" class="content-area">
   <main id="main" class="site-main" role="main">
 <!-- MIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIT -->
@@ -22,7 +24,7 @@ get_header(); ?>
   <?php
   if( have_rows('price_cat', 'option') ):
     while ( have_rows('price_cat', 'option') ) : the_row(); ?>
-      <button class="price-cat-btn"
+      <button class="price-cat-btn" id="<?php the_sub_field('titel'); ?>"
        data-a="<?php the_sub_field('a'); ?>"
        data-b="<?php the_sub_field('b'); ?>"
        data-c="<?php the_sub_field('c'); ?>"
@@ -35,7 +37,34 @@ get_header(); ?>
 </div>
 
 <script>
-alert("Heeey");
+
+function getData(id) {
+  a = Number($("#" + id).data('a'));
+  b = Number($("#" + id).data('b'));
+  c = Number($("#" + id).data('c'));
+  d = Number($("#" + id).data('d'));
+  return { a: a, b: b, c: c, d: d }
+}
+function PriceCat(data) {
+  this.a = data.a;
+  this.b = data.b;
+  this.c = data.c;
+  this.d = data.d;
+  this.price = function(number_of_words) {
+    return (Math.round(number_of_words*this.a) - Math.pow(number_of_words*this.b, this.c)+1)+this.d;
+  }
+  this.price_with_deadline = function(word_count, discount) {
+    let discount_int = Number(discount) * 0.01; // For at procent skal blive et decimaltal: 10 * 0,01 = 0,1  
+    return (this.price(word_count) * (1 - discount_int));
+  }
+}
+
+$(document).ready(function() {
+  $(".price-cat-btn").each(function(i, price_cat) {
+    window[price_cat.id] = new PriceCat(getData(price_cat.id)); 
+  });
+});
+
 </script>
 <!-- MIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIT -->
 
