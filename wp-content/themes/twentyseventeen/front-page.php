@@ -20,41 +20,52 @@ get_header(); ?>
   <main id="main" class="site-main" role="main">
 <!-- MIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIT -->
 
-<div class="price-cat-btn-wrapper">
-  <?php
-  $index_for_cat = 0;
-  if( have_rows('price_cat', 'option') ):
-    while ( have_rows('price_cat', 'option') ) : the_row(); ?>
-      <button class="price-cat-btn <?php echo ($index_for_cat == 0) ? 'active' : '' ?>" id="<?php the_sub_field('titel'); ?>"
-       data-a="<?php the_sub_field('a'); ?>"
-       data-b="<?php the_sub_field('b'); ?>"
-       data-c="<?php the_sub_field('c'); ?>"
-       data-d="<?php the_sub_field('d'); ?>">
-          <?php the_sub_field('titel'); ?>
-      </button>
-  <?php 
-    $index_for_cat++;
-    endwhile;
-  endif; ?>
-</div>
-<hr>
-<input id="ordTaeller" type="text" placeholder="Indtast antal ord.." /> 
-<div class="price-cat-discount-wrapper">
-  <?php
-  $index = 0;
-  if( have_rows('deadlines', 'option') ):
-    while ( have_rows('deadlines', 'option') ) : the_row(); ?>
-      <button class="price-cat-deadline-btn <?php echo ($index === 0) ? 'active' : '' ?>"
-       data-discount="<?php the_sub_field('rabat'); ?>">
-          <?php the_sub_field('periode'); ?>
-      </button>
-  <?php 
-    $index++;
-    endwhile;
-  endif; ?>
-</div>
-<h2 id="priceCatPrice"></h2>
-
+<style>
+/* Se under TILPAS > CUSTOM CSS */
+</style>
+<div class="price-cat-wrapper">
+  <div class="price-cat-btn-wrapper">
+    <?php
+    $index_for_cat = 0;
+    if( have_rows('price_cat', 'option') ):
+      while ( have_rows('price_cat', 'option') ) : the_row(); ?>
+        <button class="price-cat-btn <?php echo ($index_for_cat == 0) ? 'active' : '' ?>" id="<?php the_sub_field('titel'); ?>"
+         data-a="<?php the_sub_field('a'); ?>"
+         data-b="<?php the_sub_field('b'); ?>"
+         data-c="<?php the_sub_field('c'); ?>"
+         data-d="<?php the_sub_field('d'); ?>">
+            <?php the_sub_field('titel'); ?>
+        </button>
+    <?php 
+      $index_for_cat++;
+      endwhile;
+    endif; ?>
+  </div>
+  <hr>
+  <div class="fejl-besked"></div>
+  <div class="ord-taeller-wrapper">
+    <input id="ordTaeller" type="text" placeholder="Indtast antal ord.." /> 
+  </div>
+  <div class="price-cat-discount-wrapper">
+    <?php
+    $index = 0;
+    if( have_rows('deadlines', 'option') ):
+      while ( have_rows('deadlines', 'option') ) : the_row(); ?>
+        <button class="price-cat-deadline-btn <?php echo ($index === 0) ? 'active' : '' ?>"
+         data-discount="<?php the_sub_field('rabat'); ?>">
+            <?php the_sub_field('periode'); ?>
+        </button>
+    <?php 
+      $index++;
+      endwhile;
+    endif; ?>
+  </div>
+  <h2 id="priceCatPrice"></h2>
+  <div class="send-offer-wrapper">
+    <input type="text" id="sendMailNow" placeholder="Indtast din mail..">
+    <a href="#" id="sendOffer">Send mail med pris</a>
+  </div>
+</div><!-- price-cat-wrapper -->
 <script>
 
 function getData(id) {
@@ -83,14 +94,14 @@ function PriceCat(data) {
   }
 }
 
-function changePrice(cons_name, data) {
-  $("#priceCatPrice").html(window[cons_name].price_with_deadline(data.word_count, data.discount) + " kr. "); 
-}
-
 function getDiscountAndWordCount() { 
   let word_count = Number($("#ordTaeller").val()) || 0; // Returnere 0, hvis der ikke er indtastet noget endnu.
   let discount = Number($(".price-cat-discount-wrapper .active").data('discount'));
   return { word_count: word_count, discount: discount }
+}
+
+function changePrice(cons_name, data) {
+  $("#priceCatPrice").html(window[cons_name].price_with_deadline(data.word_count, data.discount) + " kr. "); 
 }
 
 $(document).ready(function() {
@@ -112,10 +123,30 @@ $(document).ready(function() {
   });
 
   $("#ordTaeller").on("input", function() { // Når der bliver tastet noget nyt ind i antal-ord feltet.
-    let active_price_cat_id = $(".price-cat-btn-wrapper .active").attr('id');
-    changePrice(active_price_cat_id, getDiscountAndWordCount());
+    if ($.isNumeric(Number($("#ordTaeller").val()))) { // Er det et tal, der bliver indtastet?
+      $(".fejl-besked").hide();
+      $(".send-offer-wrapper").slideDown(400); // Hvis mailfunktion, hvis antal ord er valid.
+      let active_price_cat_id = $(".price-cat-btn-wrapper .active").attr('id');
+      changePrice(active_price_cat_id, getDiscountAndWordCount());
+    } else {
+      $(".send-offer-wrapper").slideUp(400); // Fjern mailfunktion, hvis antal ord ikke er valid
+      $(".fejl-besked").html("Det indtastede skal være et tal. Prøv igen.").show();
+    }
   });
 
+  $("#sendOffer").on('click', function(e) {
+    e.preventDefault();
+    var mail = $("#sendMailNow").val();
+    var price_cat = $(".price-cat-btn-wrapper .active").attr('id');
+    var num_object = getDiscountAndWordCount();
+    var price = window[price_cat].price_with_deadline(num_object.word_count, num_object.discount);
+    if (num_object.word_count && mail && price && price_cat) { // Hvis alle værdier er tilstede
+      window.location = 'mailto:' + mail + '?subject=' + price_cat + ' af A1Kommunikation' + '&body=' + num_object.word_count + ' ords ' + price_cat + '. Pris: ' + price + '.%0D%0A%0D%0A' + 'Vedhæft venligst vedrørende fil/filer og indtast dit navn, adresse, CVR. nr. mm.';
+    debugger;
+    } else {
+      $(".fejl-besked").html("Indtast venligst et antal ord og din mail og prøv igen.").show(); 
+    }
+  });
 });
 
 </script>
