@@ -52,7 +52,8 @@ get_header(); ?>
     if( have_rows('deadlines', 'option') ):
       while ( have_rows('deadlines', 'option') ) : the_row(); ?>
         <button class="price-cat-deadline-btn <?php echo ($index === 0) ? 'active' : '' ?>"
-         data-discount="<?php the_sub_field('rabat'); ?>">
+         data-discount="<?php the_sub_field('rabat'); ?>"
+         data-string="<?php the_sub_field('periode'); ?>">
             <?php the_sub_field('periode'); ?>
         </button>
     <?php 
@@ -62,8 +63,8 @@ get_header(); ?>
   </div>
   <h2 id="priceCatPrice"></h2>
   <div class="send-offer-wrapper">
-    <input type="text" id="sendMailNow" placeholder="Indtast din mail..">
-    <a href="#" id="sendOffer">Send mail med pris</a>
+    <input type="email" id="sendMailNow" placeholder="Indtast din mail..">
+    <a href="#" target="_blank" id="sendOffer">Send mail med pris</a>
   </div>
 </div><!-- price-cat-wrapper -->
 <script>
@@ -104,6 +105,11 @@ function changePrice(cons_name, data) {
   $("#priceCatPrice").html(window[cons_name].price_with_deadline(data.word_count, data.discount) + " kr. "); 
 }
 
+function validateEmail(Email) {
+    var pattern = /^([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+    return $.trim(Email).match(pattern) ? true : false;
+}
+
 $(document).ready(function() {
 
   $(".price-cat-btn").each(function(i, price_cat) {
@@ -123,26 +129,36 @@ $(document).ready(function() {
   });
 
   $("#ordTaeller").on("input", function() { // Når der bliver tastet noget nyt ind i antal-ord feltet.
-    if ($.isNumeric(Number($("#ordTaeller").val()))) { // Er det et tal, der bliver indtastet?
+  let word_count = Number($("#ordTaeller").val()); 
+    if ( word_count <= 200000 && $.isNumeric(word_count) ) { // Er det et tal, der bliver indtastet?
       $(".fejl-besked").hide();
       $(".send-offer-wrapper").slideDown(400); // Hvis mailfunktion, hvis antal ord er valid.
       let active_price_cat_id = $(".price-cat-btn-wrapper .active").attr('id');
       changePrice(active_price_cat_id, getDiscountAndWordCount());
+    } else if (word_count > 200000) {
+      $(".send-offer-wrapper").slideUp(400); // Fjern mailfunktion, hvis antal ord ikke er valid
+      $(".fejl-besked").html("Det maksimale antal ord er 200.000").show();
     } else {
       $(".send-offer-wrapper").slideUp(400); // Fjern mailfunktion, hvis antal ord ikke er valid
       $(".fejl-besked").html("Det indtastede skal være et tal. Prøv igen.").show();
     }
   });
 
-  $("#sendOffer").on('click', function(e) {
+  $("#sendOffer").on('click', function(e) { // Indsaml data og send mail.
     e.preventDefault();
     var mail = $("#sendMailNow").val();
+    var deadline = $(".price-cat-discount-wrapper .active").data('string');
+    debugger;
+    var email_validated = validateEmail(mail);
     var price_cat = $(".price-cat-btn-wrapper .active").attr('id');
     var num_object = getDiscountAndWordCount();
     var price = window[price_cat].price_with_deadline(num_object.word_count, num_object.discount);
-    if (num_object.word_count && mail && price && price_cat) { // Hvis alle værdier er tilstede
-      window.location = 'mailto:' + mail + '?subject=' + price_cat + ' af A1Kommunikation' + '&body=' + num_object.word_count + ' ords ' + price_cat + '. Pris: ' + price + '.%0D%0A%0D%0A' + 'Vedhæft venligst vedrørende fil/filer og indtast dit navn, adresse, CVR. nr. mm.';
-    debugger;
+    if (num_object.word_count && mail && price && price_cat && email_validated) { // Hvis alle værdier er tilstede
+      window.location = 'mailto:' + mail + '?subject=' + price_cat + ' af A1Kommunikation' + 
+        '&body=' + num_object.word_count + ' ords ' + price_cat + '. Pris: ' + price + ' kr.' + '%0D%0A' + 
+        'Ønskes færdiggjort om ' + deadline + '.' + '%0D%0A%0D%0A' + 'Vedhæft venligst vedrørende fil/filer og indtast dit navn, adresse, CVR. nr. mm.';
+    } else if (!email_validated) {
+      $(".fejl-besked").html("Din email blev ikke godkendt. Ret den til og prøv igen.").show(); 
     } else {
       $(".fejl-besked").html("Indtast venligst et antal ord og din mail og prøv igen.").show(); 
     }
