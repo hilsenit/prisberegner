@@ -54,6 +54,7 @@ get_header(); ?>
   endif; ?>
 </div>
 <h2 id="priceCatPrice"></h2>
+
 <script>
 
 function getData(id) {
@@ -77,13 +78,13 @@ function PriceCat(data) {
       return 0;
     } else {
       let discount_int = Number(discount) * 0.01; // For at procent skal blive et decimaltal: 10 * 0,01 = 0,1  
-      return (this.price(word_count) * (1 - discount_int));
+      return Math.round(this.price(word_count) * (1 - discount_int));
     }
   }
 }
 
 function changePrice(cons_name, data) {
-  $("#priceCatPrice").html(window[cons_name].price_with_deadline(data.word_count, data.discount)); 
+  $("#priceCatPrice").html(window[cons_name].price_with_deadline(data.word_count, data.discount) + " kr. "); 
 }
 
 function getDiscountAndWordCount() { 
@@ -100,11 +101,14 @@ $(document).ready(function() {
   });
 
   $(".price-cat-btn").click(function() { // Skifter pris kategori via klik
+    $(this).addClass('active').siblings().removeClass('active');
     changePrice(this.id, getDiscountAndWordCount());
   });
 
-  $(".price-deadline-btn").click(function() { // Skifter deadline via klik
-    $("#ordTaeller").val();
+  $(".price-cat-deadline-btn").click(function() { // Skifter deadline via klik
+    let active_price_cat_id = $(".price-cat-btn-wrapper .active").attr('id');
+    $(this).addClass('active').siblings().removeClass('active');
+    changePrice(active_price_cat_id, getDiscountAndWordCount());
   });
 
   $("#ordTaeller").on("input", function() { // Når der bliver tastet noget nyt ind i antal-ord feltet.
