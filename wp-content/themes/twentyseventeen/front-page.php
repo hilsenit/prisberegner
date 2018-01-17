@@ -18,6 +18,7 @@ get_header(); ?>
 
 <div id="primary" class="content-area">
   <main id="main" class="site-main" role="main">
+
 <!-- MIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIT -->
 
 <style>
@@ -39,7 +40,7 @@ get_header(); ?>
     <?php 
       $index_for_cat++;
       endwhile;
-    endif; ?>
+    endif; # If have_rows?>
   </div>
   <hr>
   <div class="fejl-besked"></div>
@@ -50,6 +51,7 @@ get_header(); ?>
     <?php
     $index = 0;
     if( have_rows('deadlines', 'option') ):
+
       while ( have_rows('deadlines', 'option') ) : the_row(); ?>
         <button class="price-cat-deadline-btn <?php echo ($index === 0) ? 'active' : '' ?>"
          data-discount="<?php the_sub_field('rabat'); ?>"
@@ -113,7 +115,7 @@ function validateEmail(Email) {
 $(document).ready(function() {
 
   $(".price-cat-btn").each(function(i, price_cat) {
-    window[price_cat.id] = new PriceCat(getData(price_cat.id));
+    window[price_cat.id] = new PriceCat(getData(price_cat.id)); // Gemmes under en global variabel med samme navn som knappens id
     if (i === 0) { changePrice(price_cat.id, getDiscountAndWordCount()); } // Sæt prisen ved første priskategori.
   });
 
@@ -148,7 +150,6 @@ $(document).ready(function() {
     e.preventDefault();
     var mail = $("#sendMailNow").val();
     var deadline = $(".price-cat-discount-wrapper .active").data('string');
-    debugger;
     var email_validated = validateEmail(mail);
     var price_cat = $(".price-cat-btn-wrapper .active").attr('id');
     var num_object = getDiscountAndWordCount();
