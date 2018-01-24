@@ -37,32 +37,51 @@ get_header(); ?>
          data-d="<?php the_sub_field('d'); ?>">
             <?php the_sub_field('titel'); ?>
         </button>
+
+		<!-- DEADLINES -->
+				<?php $index = 0;
+				if( get_sub_field('deadline_enabled') && have_rows('deadlines_val', 'option') ):
+					while ( have_rows('deadlines_val', 'option') ) : the_row(); ?>
+						<button class="price-cat-deadline-btn <?php echo ($index === 0) ? 'active' : '' ?>"
+						 data-discount="<?php the_sub_field('rabat'); ?>"
+						 data-string="<?php the_sub_field('periode'); ?>">
+								<?php the_sub_field('periode'); ?>
+						</button>
+				<?php 
+					$index++;
+					endwhile;
+					endif; # deadlines_enabled && deadlines_val rows ? 
+				?>
+		<!-- DEADLINES END -->
+
     <?php 
       $index_for_cat++;
       endwhile;
-    endif; # If have_rows?>
+			endif; # price_cat have rows?
+		?>
   </div>
   <hr>
   <div class="fejl-besked"></div>
   <div class="ord-taeller-wrapper">
     <input id="ordTaeller" type="text" placeholder="Indtast antal ord.." /> 
   </div>
-  <div class="price-cat-discount-wrapper">
-    <?php
-    $index = 0;
-    if( have_rows('deadlines', 'option') ):
+		<div class="price-cat-discount-wrapper">
+			<?php
+			$index = 0;
+			if( have_rows('deadlines_val', 'option') ):
+				while ( have_rows('deadlines_val', 'option') ) : the_row(); ?>
+					<button class="price-cat-deadline-btn <?php echo ($index === 0) ? 'active' : '' ?>"
+					 data-discount="<?php the_sub_field('rabat'); ?>"
+					 data-string="<?php the_sub_field('periode'); ?>">
+							<?php the_sub_field('periode'); ?>
+					</button>
+					
+			<?php 
+				$index++;
+				endwhile;
+			endif; ?>
+		</div>
 
-      while ( have_rows('deadlines', 'option') ) : the_row(); ?>
-        <button class="price-cat-deadline-btn <?php echo ($index === 0) ? 'active' : '' ?>"
-         data-discount="<?php the_sub_field('rabat'); ?>"
-         data-string="<?php the_sub_field('periode'); ?>">
-            <?php the_sub_field('periode'); ?>
-        </button>
-    <?php 
-      $index++;
-      endwhile;
-    endif; ?>
-  </div>
   <h2 id="priceCatPrice"></h2>
   <div class="send-offer-wrapper">
     <input type="email" id="sendMailNow" placeholder="Indtast din mail..">
