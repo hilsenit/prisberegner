@@ -33,6 +33,11 @@
 	text-align: center;
 }
 
+.incl-feedback {
+	width: 25%;
+	margin: 0 auto;
+
+}
 
 .lang-courses-wrapper {
 	display: flex;

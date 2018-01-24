@@ -35,7 +35,8 @@ get_header(); ?>
          data-b="<?php the_sub_field('b'); ?>"
          data-c="<?php the_sub_field('c'); ?>"
 				 data-d="<?php the_sub_field('d'); ?>"
-				 data-pages-enabled="<?php the_sub_field('pages_enabled'); ?>">
+				 data-pages-enabled="<?php the_sub_field('pages_enabled'); ?>"
+				 data-incl-feedback="<?php the_sub_field('incl_feedback'); ?>">
             <?php the_sub_field('titel'); ?>
         </button>
     <?php 
@@ -93,6 +94,13 @@ get_header(); ?>
     <input id="ordTaeller" type="text" placeholder="Indtast.." /> 
   </div>
 		
+	
+
+	<div class="incl-feedback vis-ikke-dette">
+			Inkl. en skriftlig feedback på teksten 
+		<input type="checkbox" id="inclFeedback" unchecked></input>
+		Ja tak!
+	</div>
 
   <h2 id="priceCatPrice" data-price="0"></h2>
   <div class="send-offer-wrapper">
@@ -109,13 +117,15 @@ function getData(id) {
   c = Number($("#" + id).data('c'));
   d = Number($("#" + id).data('d'));
 	pages_enabled = $("#" + id).data('pages-enabled');
-  return { a: a, b: b, c: c, d: d, pages_enabled: pages_enabled }
+	incl_feedback = $("#" + id).data('incl-feedback');
+  return { a: a, b: b, c: c, d: d, pages_enabled: pages_enabled, incl_feedback: incl_feedback }
 }
 
 function PriceCat(data) {
 	this.old_price = 0;
 	this.old_word_count = 0;
 	this.pages_enabled = data.pages_enabled;
+	this.incl_feedback = data.incl_feedback;
   this.a = data.a; this.b = data.b; this.c = data.c; this.d = data.d;
   this.price = function(number_of_words) {
     return (Math.round(number_of_words*this.a) - Math.pow(number_of_words*this.b, this.c)+1)+this.d;
@@ -133,7 +143,6 @@ function PriceCat(data) {
 function getDiscountAndWordCount(parent) { 
   let word_count = Number($("#ordTaeller").val()) || 0; // Returnere 0, hvis der ikke er indtastet noget endnu.
   let discount = Number($("." + parent + " .active").data('discount') || 0);
-	debugger;
   return { word_count: word_count, discount: discount }
 }
 
@@ -144,6 +153,12 @@ function catChange(cons_name) { // Change back to the saved values, if there are
 	$("#priceCatPrice").data('price', new_price);
 	$("#ordTaeller").val(new_word_count);
 	$(".price-header").html(constructor.pages_enabled ? "Antal sider:" : "Antal ord:");
+
+	if (constructor.incl_feedback) {
+		$(".incl-feedback").show();
+	} else {
+		$(".incl-feedback").hide()
+	}
 }
 
 function changePrice(cons_name, data) {
