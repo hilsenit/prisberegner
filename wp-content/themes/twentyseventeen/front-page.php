@@ -30,7 +30,7 @@ get_header(); ?>
     $index_for_cat = 0;
     if( have_rows('price_cat', 'option') ):
       while ( have_rows('price_cat', 'option') ) : the_row(); ?>
-        <button class="price-cat-btn <?php echo ($index_for_cat == 0) ? 'active' : '' ?>" id="<?php the_sub_field('titel'); ?>"
+        <button class="price-cat-btn js-price-cat-btn <?php echo ($index_for_cat == 0) ? 'active' : '' ?>" id="<?php the_sub_field('titel'); ?>"
          data-a="<?php the_sub_field('a'); ?>"
          data-b="<?php the_sub_field('b'); ?>"
          data-c="<?php the_sub_field('c'); ?>"
@@ -43,8 +43,26 @@ get_header(); ?>
       endwhile;
 			endif; # price_cat have rows?
 		?>
-  </div>
+		
+
+		<!-- Sprogkurser -->
+		<?php if( have_rows('lang_courses', 'option') ): ?>
+			<button class="price-cat-btn js-lang-courses" id="lang-courses-wrapper">Sprogkurser</button>
+ 			<div class="lang-courses-wrapper">
+			<?php while ( have_rows('lang_courses', 'option' ) ): the_row(); ?>
+				<div class="lang-course">
+					<h4 class="text-center"><?php the_sub_field('course_title'); ?></h4>
+					<p><?php the_sub_field('course_content'); ?></p>
+					<h5 class="text-center">Pris: <?php the_sub_field('course_price'); ?> kr.</h5>
+					<a class="text-center" href="<?php the_sub_field('course_link'); ?>">Læs mere</a>
+				</div>
+			<?php endwhile; ?>
+			</div><!-- lang-course-wrapper -->
+			<?php endif; ?>
+  </div> <!-- price-cat-btn-wrapper -->
 <hr>
+	<div class="price-cat-output">
+
 		<!-- DEADLINES -->
     <?php if( have_rows('price_cat', 'option') ): ?>
 			<?php while ( have_rows('price_cat', 'option') ) : the_row(); ?>
@@ -53,7 +71,7 @@ get_header(); ?>
 				if( have_rows('deadlines', 'option') ):
 					while ( have_rows('deadlines', 'option') ) : the_row(); ?>
 				<button data-parent="<?php echo $parent ?>" 
-							class="price-cat-deadline-btn <?php echo ($index === 0) ? 'active' : '' ?>"
+							class="price-cat-deadline-btn js-price-cat-deadline-btn <?php echo ($index === 0) ? 'active' : '' ?>"
 						 data-discount="<?php echo get_sub_field('rabat'); ?>"
 						 data-string="<?php echo get_sub_field('periode'); ?>">
 								<?php echo get_sub_field('periode'); ?>
@@ -68,7 +86,7 @@ get_header(); ?>
 		<?php endif; # price_cat have rows?
 		?>
 		<!-- DEADLINES END -->
-  </div>
+
   <div class="fejl-besked"></div>
 	<h3 class="price-header text-center">Antal ord:</h3>
   <div class="ord-taeller-wrapper">
@@ -81,6 +99,7 @@ get_header(); ?>
     <input type="email" id="sendMailNow" placeholder="Indtast din mail..">
     <a href="#" target="_blank" id="sendOffer">Send mail med pris</a>
   </div>
+	</div><!-- price-cat-output -->
 </div><!-- price-cat-wrapper -->
 <script>
 
@@ -113,7 +132,7 @@ function PriceCat(data) {
 
 function getDiscountAndWordCount(parent) { 
   let word_count = Number($("#ordTaeller").val()) || 0; // Returnere 0, hvis der ikke er indtastet noget endnu.
-  let discount = Number($("." + parent + " .active").data('discount'));
+  let discount = Number($("." + parent + " .active").data('discount') || 0);
 	debugger;
   return { word_count: word_count, discount: discount }
 }
@@ -140,15 +159,22 @@ function validateEmail(Email) {
 
 $(document).ready(function() {
 
-  $(".price-cat-btn").each(function(i, price_cat) {
+  $(".js-price-cat-btn").each(function(i, price_cat) {
     window[price_cat.id] = new PriceCat(getData(price_cat.id)); // Gemmes under en global variabel med samme navn som knappens id
 		if (i === 0) { 
 			changePrice(price_cat.id, getDiscountAndWordCount(price_cat.id)); // Sæt prisen ved første priskategori.
 			$("." + price_cat.id).show(); // Vis deadlines, hvis der er nogle
 		} 
   });
+	$(".js-lang-courses").on("click", function() {
+		$(".price-cat-output").hide();
+		$(".lang-courses-wrapper").show(); 
+    $(this).addClass('active').siblings().removeClass('active');
+	});
 
-  $(".price-cat-btn").click(function() { // Skifter pris kategori via klik
+  $(".js-price-cat-btn").click(function() { // Skifter pris kategori via klik
+		$(".lang-courses-wrapper").hide();
+		$(".price-cat-output").show();
 		let old_category_id = $(".price-cat-btn-wrapper .active").attr('id');
 		window[old_category_id].old_price = Number($("#priceCatPrice").data('price')) || 0; // Save old price
 		window[old_category_id].old_word_count = Number($("#ordTaeller").val()) || 0; // Save old word count
@@ -158,7 +184,7 @@ $(document).ready(function() {
 		catChange(this.id);
   });
 
-  $(".price-cat-deadline-btn").click(function() { // Skifter deadline via klik
+  $(".js-price-cat-deadline-btn").click(function() { // Skifter deadline via klik
 	 	let parent = $(this).data('parent');
     $(this).addClass('active').siblings().removeClass('active');
     changePrice(parent, getDiscountAndWordCount(parent));

@@ -34,35 +34,35 @@
 }
 
 
+.lang-courses-wrapper {
+	display: flex;
+	display: none;
+	justify-content: center;
+	flex-wrap: wrap;
+	padding: 20px;
+	margin: 30px 0px;
+	overflow: hidden;
+}
+.lang-course {
+	width: 25%;
+	box-sizing: border-box;
+	border: 10px solid white;
+	height: auto;
+	float: left;
+	background-color: red;
+	color: white!important;
+}
+.lang-course p {
+	padding: 10px 20px;
+}
 
+.lang-course h5, .lang-course h4, .lang-course a {
+	color: white!important;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.lang-course h4 {
+	padding-top: 25px!important;
+}
 
 
 
