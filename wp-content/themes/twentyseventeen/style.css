@@ -7,13 +7,21 @@
     text-align: center;
     background-color: red;
     color: white;
-    line-height: 50px;
-    height: 130px;
-    width: 130px;
+		padding: 65px 20px; 
+    height: 180px;
+    width: 180px;
     border-radius: 100%;
     margin: 47px auto;
+		font-size: 1.2em;
 }
 
+.price-cat-deadline-btn {
+    background-color: white;
+    color: black;
+}
+.price-cat-discount-wrapper .active {
+	color: white!important;
+}
 .price-cat-discount-wrapper .active {
   pointer-events: none;
   cursor: default;

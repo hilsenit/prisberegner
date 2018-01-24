@@ -63,6 +63,10 @@ get_header(); ?>
   </div> <!-- price-cat-btn-wrapper -->
 <hr>
 	<div class="price-cat-output">
+	<h3 class="price-header text-center">Antal ord:</h3>
+  <div class="ord-taeller-wrapper">
+    <input id="ordTaeller" type="text" placeholder="Indtast.." /> 
+  </div>
 
 		<!-- DEADLINES -->
     <?php if( have_rows('price_cat', 'option') ): ?>
@@ -89,10 +93,6 @@ get_header(); ?>
 		<!-- DEADLINES END -->
 
   <div class="fejl-besked"></div>
-	<h3 class="price-header text-center">Antal ord:</h3>
-  <div class="ord-taeller-wrapper">
-    <input id="ordTaeller" type="text" placeholder="Indtast.." /> 
-  </div>
 		
 	
 
@@ -102,7 +102,7 @@ get_header(); ?>
 		Ja tak!
 	</div>
 
-  <h2 id="priceCatPrice" data-price="0"></h2>
+  <h2 id="priceCatPrice" data-price="0">Altid hurtig levering</h2>
   <div class="send-offer-wrapper">
     <input type="email" id="sendMailNow" placeholder="Indtast din mail..">
     <a href="#" target="_blank" id="sendOffer">Send mail med pris</a>
@@ -177,7 +177,7 @@ $(document).ready(function() {
   $(".js-price-cat-btn").each(function(i, price_cat) {
     window[price_cat.id] = new PriceCat(getData(price_cat.id)); // Gemmes under en global variabel med samme navn som knappens id
 		if (i === 0) { 
-			changePrice(price_cat.id, getDiscountAndWordCount(price_cat.id)); // Sæt prisen ved første priskategori.
+			// changePrice(price_cat.id, getDiscountAndWordCount(price_cat.id)); // Sæt prisen ved første priskategori.
 			$("." + price_cat.id).show(); // Vis deadlines, hvis der er nogle
 		} 
   });
