@@ -34,55 +34,49 @@ get_header(); ?>
          data-a="<?php the_sub_field('a'); ?>"
          data-b="<?php the_sub_field('b'); ?>"
          data-c="<?php the_sub_field('c'); ?>"
-         data-d="<?php the_sub_field('d'); ?>">
+				 data-d="<?php the_sub_field('d'); ?>"
+				 data-pages-enabled="<?php the_sub_field('pages_enabled'); ?>">
             <?php the_sub_field('titel'); ?>
         </button>
-
-		<!-- DEADLINES -->
-				<?php $index = 0;
-				if( get_sub_field('deadline_enabled') && have_rows('deadlines_val', 'option') ):
-					while ( have_rows('deadlines_val', 'option') ) : the_row(); ?>
-						<button class="price-cat-deadline-btn <?php echo ($index === 0) ? 'active' : '' ?>"
-						 data-discount="<?php the_sub_field('rabat'); ?>"
-						 data-string="<?php the_sub_field('periode'); ?>">
-								<?php the_sub_field('periode'); ?>
-						</button>
-				<?php 
-					$index++;
-					endwhile;
-					endif; # deadlines_enabled && deadlines_val rows ? 
-				?>
-		<!-- DEADLINES END -->
-
     <?php 
       $index_for_cat++;
       endwhile;
 			endif; # price_cat have rows?
 		?>
   </div>
-  <hr>
-  <div class="fejl-besked"></div>
-  <div class="ord-taeller-wrapper">
-    <input id="ordTaeller" type="text" placeholder="Indtast antal ord.." /> 
+<hr>
+		<!-- DEADLINES -->
+    <?php if( have_rows('price_cat', 'option') ): ?>
+			<?php while ( have_rows('price_cat', 'option') ) : the_row(); ?>
+				<div class="price-cat-discount-wrapper vis-ikke-dette <?php the_sub_field('titel'); ?>">
+				<?php $index = 0; $parent = get_sub_field('titel'); 
+				if( have_rows('deadlines', 'option') ):
+					while ( have_rows('deadlines', 'option') ) : the_row(); ?>
+				<button data-parent="<?php echo $parent ?>" 
+							class="price-cat-deadline-btn <?php echo ($index === 0) ? 'active' : '' ?>"
+						 data-discount="<?php echo get_sub_field('rabat'); ?>"
+						 data-string="<?php echo get_sub_field('periode'); ?>">
+								<?php echo get_sub_field('periode'); ?>
+								
+						</button>
+				<?php $index++; ?>
+				<?php endwhile;  
+			  endif; # deadlines_enabled && deadlines_val rows ? 
+				?>
+				</div><!-- price-cat-discount-wrapper -->
+			<?php endwhile; ?>
+		<?php endif; # price_cat have rows?
+		?>
+		<!-- DEADLINES END -->
   </div>
-		<div class="price-cat-discount-wrapper">
-			<?php
-			$index = 0;
-			if( have_rows('deadlines_val', 'option') ):
-				while ( have_rows('deadlines_val', 'option') ) : the_row(); ?>
-					<button class="price-cat-deadline-btn <?php echo ($index === 0) ? 'active' : '' ?>"
-					 data-discount="<?php the_sub_field('rabat'); ?>"
-					 data-string="<?php the_sub_field('periode'); ?>">
-							<?php the_sub_field('periode'); ?>
-					</button>
-					
-			<?php 
-				$index++;
-				endwhile;
-			endif; ?>
-		</div>
+  <div class="fejl-besked"></div>
+	<h3 class="price-header text-center">Antal ord:</h3>
+  <div class="ord-taeller-wrapper">
+    <input id="ordTaeller" type="text" placeholder="Indtast.." /> 
+  </div>
+		
 
-  <h2 id="priceCatPrice"></h2>
+  <h2 id="priceCatPrice" data-price="0"></h2>
   <div class="send-offer-wrapper">
     <input type="email" id="sendMailNow" placeholder="Indtast din mail..">
     <a href="#" target="_blank" id="sendOffer">Send mail med pris</a>
@@ -95,14 +89,15 @@ function getData(id) {
   b = Number($("#" + id).data('b'));
   c = Number($("#" + id).data('c'));
   d = Number($("#" + id).data('d'));
-  return { a: a, b: b, c: c, d: d }
+	pages_enabled = $("#" + id).data('pages-enabled');
+  return { a: a, b: b, c: c, d: d, pages_enabled: pages_enabled }
 }
 
 function PriceCat(data) {
-  this.a = data.a;
-  this.b = data.b;
-  this.c = data.c;
-  this.d = data.d;
+	this.old_price = 0;
+	this.old_word_count = 0;
+	this.pages_enabled = data.pages_enabled;
+  this.a = data.a; this.b = data.b; this.c = data.c; this.d = data.d;
   this.price = function(number_of_words) {
     return (Math.round(number_of_words*this.a) - Math.pow(number_of_words*this.b, this.c)+1)+this.d;
   }
@@ -116,14 +111,26 @@ function PriceCat(data) {
   }
 }
 
-function getDiscountAndWordCount() { 
+function getDiscountAndWordCount(parent) { 
   let word_count = Number($("#ordTaeller").val()) || 0; // Returnere 0, hvis der ikke er indtastet noget endnu.
-  let discount = Number($(".price-cat-discount-wrapper .active").data('discount'));
+  let discount = Number($("." + parent + " .active").data('discount'));
+	debugger;
   return { word_count: word_count, discount: discount }
 }
 
+function catChange(cons_name) { // Change back to the saved values, if there are any
+	var constructor = window[cons_name];
+	var new_price = constructor.old_price, new_word_count = constructor.old_word_count;
+	$("#priceCatPrice").html(new_price + " kr. "); 
+	$("#priceCatPrice").data('price', new_price);
+	$("#ordTaeller").val(new_word_count);
+	$(".price-header").html(constructor.pages_enabled ? "Antal sider:" : "Antal ord:");
+}
+
 function changePrice(cons_name, data) {
-  $("#priceCatPrice").html(window[cons_name].price_with_deadline(data.word_count, data.discount) + " kr. "); 
+	let new_price = window[cons_name].price_with_deadline(data.word_count, data.discount);
+  $("#priceCatPrice").html(new_price + " kr. "); 
+	$("#priceCatPrice").data('price', new_price);
 }
 
 function validateEmail(Email) {
@@ -135,18 +142,27 @@ $(document).ready(function() {
 
   $(".price-cat-btn").each(function(i, price_cat) {
     window[price_cat.id] = new PriceCat(getData(price_cat.id)); // Gemmes under en global variabel med samme navn som knappens id
-    if (i === 0) { changePrice(price_cat.id, getDiscountAndWordCount()); } // Sæt prisen ved første priskategori.
+		if (i === 0) { 
+			changePrice(price_cat.id, getDiscountAndWordCount(price_cat.id)); // Sæt prisen ved første priskategori.
+			$("." + price_cat.id).show(); // Vis deadlines, hvis der er nogle
+		} 
   });
 
   $(".price-cat-btn").click(function() { // Skifter pris kategori via klik
+		let old_category_id = $(".price-cat-btn-wrapper .active").attr('id');
+		window[old_category_id].old_price = Number($("#priceCatPrice").data('price')) || 0; // Save old price
+		window[old_category_id].old_word_count = Number($("#ordTaeller").val()) || 0; // Save old word count
     $(this).addClass('active').siblings().removeClass('active');
-    changePrice(this.id, getDiscountAndWordCount());
+		$(".price-cat-discount-wrapper").hide(); // HIde all deadlines
+		$("." + this.id).show(); // Show deadline if one has the same class as the category id
+		catChange(this.id);
   });
 
   $(".price-cat-deadline-btn").click(function() { // Skifter deadline via klik
-    let active_price_cat_id = $(".price-cat-btn-wrapper .active").attr('id');
+	 	let parent = $(this).data('parent');
     $(this).addClass('active').siblings().removeClass('active');
-    changePrice(active_price_cat_id, getDiscountAndWordCount());
+    changePrice(parent, getDiscountAndWordCount(parent));
+		
   });
 
   $("#ordTaeller").on("input", function() { // Når der bliver tastet noget nyt ind i antal-ord feltet.
@@ -155,7 +171,7 @@ $(document).ready(function() {
       $(".fejl-besked").hide();
       $(".send-offer-wrapper").slideDown(400); // Hvis mailfunktion, hvis antal ord er valid.
       let active_price_cat_id = $(".price-cat-btn-wrapper .active").attr('id');
-      changePrice(active_price_cat_id, getDiscountAndWordCount());
+      changePrice(active_price_cat_id, getDiscountAndWordCount(active_price_cat_id));
     } else if (word_count > 200000) {
       $(".send-offer-wrapper").slideUp(400); // Fjern mailfunktion, hvis antal ord ikke er valid
       $(".fejl-besked").html("Det maksimale antal ord er 200.000").show();
@@ -171,7 +187,7 @@ $(document).ready(function() {
     var deadline = $(".price-cat-discount-wrapper .active").data('string');
     var email_validated = validateEmail(mail);
     var price_cat = $(".price-cat-btn-wrapper .active").attr('id');
-    var num_object = getDiscountAndWordCount();
+    var num_object = getDiscountAndWordCount(price_cat);
     var price = window[price_cat].price_with_deadline(num_object.word_count, num_object.discount);
     if (num_object.word_count && mail && price && price_cat && email_validated) { // Hvis alle værdier er tilstede
       window.location = 'mailto:' + mail + '?subject=' + price_cat + ' af A1Kommunikation' + 
