@@ -21,9 +21,6 @@ get_header(); ?>
 
 <!-- MIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIT -->
 
-<style>
-/* Se under TILPAS > CUSTOM CSS */
-</style>
 <div class="price-cat-wrapper">
   <div class="price-cat-btn-wrapper">
     <?php
@@ -114,9 +111,10 @@ get_header(); ?>
 	<div class="price-wrapper price-mail-output">
 		<h2 id="priceCatPrice" data-price="0">Altid hurtig levering</h2>
 		<div class="send-offer-wrapper">
-			<input type="email" id="sendMailNow" placeholder="Indtast din mail..">
-			<a href="#" id="sendOffer">Send mail med pris</a>
+			<!--<input type="email" id="sendMailNow" placeholder="Indtast din mail..">-->
+			<a href="#" id="sendOffer">Send mail med tilbud</a>
 		</div>
+		<div class="price-red-dot"></div>
 	</div><!-- price-mail-output -->
 
 </div><!-- price-cat-wrapper -->
@@ -155,10 +153,11 @@ function PriceCat(data) {
     } else {
       let discount_int = Number(discount) * 0.01; // For at procent skal blive et decimaltal: 10 * 0,01 = 0,1  
 			if (this.feedback_activated) { // Inklusiv feedback ekstra pris
-				return Math.round((this.price(word_count) * (1 - discount_int)) * (Number(this.feedback_price) * 0.01 + 1));
+        x = Math.round((this.price(word_count) * (1 - discount_int)) * (Number(this.feedback_price) * 0.01 + 1));
 			} else {
-				return Math.round(this.price(word_count) * (1 - discount_int));
+				x = Math.round(this.price(word_count) * (1 - discount_int));
 			}
+			return  x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Så der kommer punktum i tallene, hvis der er over 1000
     }
   }
 }
@@ -177,9 +176,15 @@ function catChange(cons_name) { // Change back to the saved values, if there are
 	$("#ordTaeller").val(new_word_count);
 	$("#sendOffer").data('active', cons_name);
 
+debugger;
+	if (new_word_count < 100.000) { 
+		$(".fejl-besked").hide(); 
+	} else {
+    $(".fejl-besked").html("Det maksimale antal ord i prisberegneren er 100.000. Er din opgave større, så <a href='https://a1kommunikation.dk/kontakt/'>kontakt os.</a>").show();
+	}
 	if (constructor.incl_feedback) { 
 		$("#inclFeedback").data('parent', cons_name); // Needed for feedback discount
-		$("#inclFeedback").removeAttr("checked");
+		$("#inclFeedback").prop("checked", constructor.feedback_activated); // Should it be checked or not?
 		$(".incl-feedback").show(); 
 	} else { 
 		$(".incl-feedback").hide(); 
@@ -208,14 +213,14 @@ $(document).ready(function() {
 
   $(".js-price-cat-btn").each(function(i, price_cat) {
     window[price_cat.id] = new PriceCat(getData(price_cat.id)); // Gemmes under en global variabel med samme navn som knappens id
-		if (i === 0) { 
-			// changePrice(price_cat.id, getDiscountAndWordCount(price_cat.id)); // Sæt prisen ved første priskategori.
+		if (i === 0) { 	
+			catChange(price_cat.id)
 			$("." + price_cat.id).show(); // Vis deadlines, hvis der er nogle
 		} 
   });
 
 	$(".js-lang-courses").on("click", function() {
-		$(".price-cat-output").hide();
+		$(".price-cat-output, .price-mail-output, .fejl-besked").hide();
 		$(".lang-courses-wrapper").show(); 
     $(this).addClass('active').siblings().removeClass('active');
 	});
@@ -228,7 +233,7 @@ $(document).ready(function() {
 
   $(".js-price-cat-btn").click(function() { // Skifter pris kategori via klik
 		$(".lang-courses-wrapper").hide();
-		$(".price-cat-output").show();
+		$(".price-cat-output, .price-mail-output").show();
 		let old_category_id = $(".price-cat-btn-wrapper .active").attr('id');
 		window[old_category_id].old_price = Number($("#priceCatPrice").data('price')) || 0; // Save old price
 		window[old_category_id].old_word_count = Number($("#ordTaeller").val()) || 0; // Save old word count
@@ -246,54 +251,47 @@ $(document).ready(function() {
 
   $("#ordTaeller").on("input", function() { // Når der bliver tastet noget nyt ind i antal-ord feltet.
   let word_count = Number($("#ordTaeller").val()); 
-    if ( word_count <= 200000 && $.isNumeric(word_count) ) { // Er det et tal, der bliver indtastet?
+    if ( word_count <= 100000 && $.isNumeric(word_count) ) { // Er det et tal, der bliver indtastet?
       $(".fejl-besked").hide();
-      $(".send-offer-wrapper").slideDown(400); // Hvis mailfunktion, hvis antal ord er valid.
+      $(".send-offer-wrapper").slideDown(400); // Vis mailfunktion, hvis antal ord er valid.
       let active_price_cat_id = $(".price-cat-btn-wrapper .active").attr('id');
       changePrice(active_price_cat_id, getDiscountAndWordCount(active_price_cat_id));
-    } else if (word_count > 200000) {
+    } else if (word_count > 100000) {
       $(".send-offer-wrapper").slideUp(400); // Fjern mailfunktion, hvis antal ord ikke er valid
-      $(".fejl-besked").html("Det maksimale antal ord er 200.000").show();
+      $(".fejl-besked").html("Det maksimale antal ord i prisberegneren er 100.000. Er din opgave større, så <a href='https://a1kommunikation.dk/kontakt/'>kontakt os.</a>").show();
     } else {
       $(".send-offer-wrapper").slideUp(400); // Fjern mailfunktion, hvis antal ord ikke er valid
       $(".fejl-besked").html("Det indtastede skal være et tal. Prøv igen.").show();
     }
   });
 
-	function = rabatType(type, val) {
-		return switch type {
+	function rabatType(type, val) {
+		switch (type) {
 			case "deadline":
-				"Afleveres tilbage om " + val;
-				break;
+				return "Vi leverer opgaven tilbage om " + val + ".";
 			case "format":
-				"Dokumentet er en " + val + " fil.";
-				break;
+				return "Dokumentet er en " + val + "-fil.";
 			case "sprog":
-				"Dokumentet skal oversættes til " + val;
-				break;
+				return "Dokumentet skal oversættes til " + val + ".";
 		}
 	}
   $("#sendOffer").on('click', function(e) { // Indsaml data og send mail.
     e.preventDefault();
 		let active_cat = $(this).data("active"); // Take the data for the active category!
-    var mail = $("#sendMailNow").val();
+    // var mail = $("#sendMailNow").val(); //Mailto kan ikke sende fra nogen, men kun til
     var deadline_text = $("." + active_cat + " .active").data('string') || false;
 		var deadline_type = $("." + active_cat +  " .active").data('deadline-type') || false;
-    var email_validated = validateEmail(mail);
+    // var email_validated = validateEmail(mail);
     var num_object = getDiscountAndWordCount(active_cat);
-		if (deadline_type && deadline) {
-			var rabat_text = rabatType(deadline_type, deadline_text);
-		}
-    var price = window[active_cat].price_with_deadline(num_object.word_count, num_object.discount);
+		var rabat_text = (deadline_type && deadline_text) ? rabatType(deadline_type, deadline_text) : "";
+    var price = $("#priceCatPrice").data("price");
 
-    if (num_object.word_count && mail && price && email_validated) { // Hvis alle værdier er iorden
-      window.location = 'mailto:' + mail + '?subject=' + active_cat + ' af A1Kommunikation' + 
-        '&body=' + num_object.word_count + ' ords ' + price_cat + '. %0D%0A%0D%0A Pris: ' + price + ' kr.' + '%0D%0A' + 
-         '.' + '%0D%0A%0D%0A' + 'Vedhæft venligst vedrørende fil/filer og indtast dit navn, adresse, CVR. nr. mm.';
-    } else if (!email_validated) {
-      $(".fejl-besked").html("Din email blev ikke godkendt. Ret den til og prøv igen.").show(); 
+    if (num_object.word_count && price ) { // Hvis alle værdier er iorden
+      window.location = 'mailto:kontakt@a1kommunikation.dk' + '?subject=Tilbud på ' + active_cat.toLowerCase() + ' af a1kommunikation' + 
+        '&body=' + active_cat + " af " + num_object.word_count + ' ord' + '. %0D%0A%0D%0APris: ' + price + ' kr.*' + '%0D%0A%0D%0A' + 
+         rabat_text + '%0D%0A%0D%0A' + 'Beskriv evt. opgaven, og vedhæft fil:' + '%0D%0A%0D%0A%0D%0A%0D%0A%0D%0A%0D%0A' + '* Tilbuddet gælder først, når du har fået en bekræftelse fra os.';
     } else {
-      $(".fejl-besked").html("Indtast venligst et antal ord og din mail og prøv igen.").show(); 
+      $(".fejl-besked").html("Indtast venligst et antal ord og prøv igen.").show(); 
     }
   });
 });
