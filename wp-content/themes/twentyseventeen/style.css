@@ -3,6 +3,15 @@
 /* PRISBEREGNER */
 /* PRISBEREGNER */
 /* PRISBEREGNER */
+.price-cat-output {
+	width: 66%;
+	float: left;
+}
+.price-mail-output {
+	width: 33%;
+	float: left;
+}
+
 #priceCatPrice {
     text-align: center;
     background-color: red;
@@ -12,7 +21,10 @@
     width: 180px;
     border-radius: 100%;
     margin: 47px auto;
-		font-size: 1.2em;
+		font-size: 1.4em;
+}
+.price-cat-btn {
+	margin: 10px;
 }
 
 .price-cat-deadline-btn {
@@ -32,19 +44,42 @@
 }
 
 #sendMailNow {
-	width: 40%;
+	width: 60%;
 	margin: 0 auto;
 	min-width: 200px;
+}
+.send-offer-btn {
+	margin-top: 15px;
 }
 
 .text-center {
 	text-align: center;
 }
 
-.incl-feedback {
-	width: 25%;
-	margin: 0 auto;
+.incl-info, .incl-feedback {
+    width: 50%;
+    margin: 10px auto;
+    text-align: center;
+}
 
+#ordTaeller {
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    background-size: 16px 18px;
+    background-position: 98% 50%;
+		min-width: 50px;
+    padding: 13px;
+    border-radius: 2px;
+		background-color: #ebebeb;
+		border-color: #ebebeb;
+}
+
+#inclFeedback {
+	transform: scale(2.0);
+	-moz-transform: scale(2.0);
+	-webkit-transform: scale(2.0);
+	margin-right: 10px;
+	margin-left: 7px;
 }
 
 .lang-courses-wrapper {
