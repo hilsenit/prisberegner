@@ -45,6 +45,7 @@ get_header(); ?>
 		
 
 		<!-- Sprogkurser -->
+	<?php if( get_field('enable_language_course', 'option') ): ?>
 		<?php if( have_rows('lang_courses', 'option') ): ?>
 			<button class="price-cat-btn js-lang-courses" id="lang-courses-wrapper">Sprogkurser</button>
  			<div class="lang-courses-wrapper">
@@ -59,6 +60,7 @@ get_header(); ?>
 			</div><!-- lang-course-wrapper -->
 			<?php endif; ?>
   </div> <!-- price-cat-btn-wrapper -->
+	<?php endif; ?><!-- end enable_language_course -->
 <hr>
 
 
@@ -176,12 +178,8 @@ function catChange(cons_name) { // Change back to the saved values, if there are
 	$("#ordTaeller").val(new_word_count);
 	$("#sendOffer").data('active', cons_name);
 
-debugger;
-	if (new_word_count < 100.000) { 
-		$(".fejl-besked").hide(); 
-	} else {
-    $(".fejl-besked").html("Det maksimale antal ord i prisberegneren er 100.000. Er din opgave større, så <a href='https://a1kommunikation.dk/kontakt/'>kontakt os.</a>").show();
-	}
+	(new_word_count < 100000) ? okayAgain(mail=false) : errorMessage() // Is the saved word_count bigger than max?
+
 	if (constructor.incl_feedback) { 
 		$("#inclFeedback").data('parent', cons_name); // Needed for feedback discount
 		$("#inclFeedback").prop("checked", constructor.feedback_activated); // Should it be checked or not?
@@ -196,6 +194,18 @@ debugger;
 	} else { 
 		$(".incl-info").hide(); 
 	}
+}
+
+function okayAgain(mail=true) {
+	$(".fejl-besked").hide();
+	if (mail) { $(".send-offer-wrapper").slideDown(400); } // Vis mailfunktion, hvis antal ord er valid. 
+}
+
+function errorMessage(type = "words") {
+	$(".send-offer-wrapper").slideUp(400); // Fjern mailfunktion, hvis antal ord ikke er valid
+	let message = (type == "words") ? 
+		"Det maksimale antal ord i prisberegneren er 100.000. Er din opgave større, så <a href='https://a1kommunikation.dk/kontakt/'>kontakt os.</a>" : "Det indtastede skal være et tal. Prøv igen."
+	$(".fejl-besked").html(message).show();
 }
 
 function changePrice(cons_name, data) {
@@ -252,18 +262,16 @@ $(document).ready(function() {
   $("#ordTaeller").on("input", function() { // Når der bliver tastet noget nyt ind i antal-ord feltet.
   let word_count = Number($("#ordTaeller").val()); 
     if ( word_count <= 100000 && $.isNumeric(word_count) ) { // Er det et tal, der bliver indtastet?
-      $(".fejl-besked").hide();
-      $(".send-offer-wrapper").slideDown(400); // Vis mailfunktion, hvis antal ord er valid.
+			okayAgain();
       let active_price_cat_id = $(".price-cat-btn-wrapper .active").attr('id');
       changePrice(active_price_cat_id, getDiscountAndWordCount(active_price_cat_id));
     } else if (word_count > 100000) {
-      $(".send-offer-wrapper").slideUp(400); // Fjern mailfunktion, hvis antal ord ikke er valid
-      $(".fejl-besked").html("Det maksimale antal ord i prisberegneren er 100.000. Er din opgave større, så <a href='https://a1kommunikation.dk/kontakt/'>kontakt os.</a>").show();
+			errorMessage();
     } else {
-      $(".send-offer-wrapper").slideUp(400); // Fjern mailfunktion, hvis antal ord ikke er valid
-      $(".fejl-besked").html("Det indtastede skal være et tal. Prøv igen.").show();
+			errorMessage("not-number");
     }
   });
+
 
 	function rabatType(type, val) {
 		switch (type) {
